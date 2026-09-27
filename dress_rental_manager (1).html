@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إدارة فساتين السهرة والتأجير</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Cairo', sans-serif; background: #f5f5f7; color: #1a1a1a; line-height: 1.6; }
+  .app { max-width: 1000px; margin: 0 auto; padding: 16px; }
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 16px; background: #fff; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .header h1 { font-size: 22px; font-weight: 700; color: #1a1a1a; }
+  .nav { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; background: #fff; padding: 12px; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .nav button { padding: 10px 18px; border: 1px solid #e5e5e5; background: #fff; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 500; color: #666; transition: all 0.2s; font-family: 'Cairo', sans-serif; }
+  .nav button.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+  .nav button:hover:not(.active) { background: #f5f5f7; }
+  .card { background: #fff; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .stat-box { background: #fff; border-radius: 16px; padding: 18px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .stat-value { font-size: 32px; font-weight: 700; color: #1a1a1a; font-variant-numeric: tabular-nums; }
+  .stat-label { font-size: 13px; color: #888; margin-top: 4px; font-weight: 500; }
+  .section-title { font-size: 18px; font-weight: 700; margin-bottom: 14px; color: #1a1a1a; }
+  .alert-box { background: #fff8e1; border-right: 4px solid #ffc107; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; }
+  .alert-danger { background: #ffebee; border-right-color: #f44336; }
+  .alert-success { background: #e8f5e9; border-right-color: #4caf50; }
+  .alert-info { background: #e3f2fd; border-right-color: #2196f3; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 14px; color: #555; margin-bottom: 6px; font-weight: 600; }
+  .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px 14px; border: 1px solid #ddd; border-radius: 10px; background: #fafafa; color: #1a1a1a; font-size: 15px; font-family: 'Cairo', sans-serif; transition: border 0.2s; }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #1a1a1a; outline: none; background: #fff; }
+  .form-group textarea { min-height: 90px; resize: vertical; }
+  .btn { padding: 12px 22px; border: none; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.2s; font-family: 'Cairo', sans-serif; }
+  .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-primary { background: #1a1a1a; color: #fff; }
+  .btn-secondary { background: #f5f5f7; color: #1a1a1a; border: 1px solid #ddd; }
+  .btn-danger { background: #f44336; color: #fff; }
+  .btn-success { background: #4caf50; color: #fff; }
+  .btn-warning { background: #ff9800; color: #fff; }
+  .btn-info { background: #2196f3; color: #fff; }
+  .dress-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+  .dress-card { background: #fff; border-radius: 16px; overflow: hidden; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .dress-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+  .dress-img { width: 100%; height: 180px; object-fit: cover; background: #f0f0f0; display: flex; align-items: center; justify-content: center; color: #aaa; font-size: 14px; }
+  .dress-info { padding: 14px; }
+  .dress-name { font-weight: 700; font-size: 16px; margin-bottom: 4px; color: #1a1a1a; }
+  .dress-meta { font-size: 13px; color: #888; }
+  .status-badge { display: inline-block; padding: 4px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; margin-top: 8px; }
+  .status-available { background: #e8f5e9; color: #2e7d32; }
+  .status-booked { background: #e3f2fd; color: #1565c0; }
+  .status-out { background: #fff3e0; color: #e65100; }
+  .status-cleaning { background: #f3e5f5; color: #6a1b9a; }
+  .status-repair { background: #ffebee; color: #c62828; }
+  .search-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .search-bar input, .search-bar select { flex: 1; min-width: 160px; padding: 12px 14px; border: 1px solid #ddd; border-radius: 10px; background: #fff; color: #1a1a1a; font-size: 14px; font-family: 'Cairo', sans-serif; }
+  .detail-header { display: flex; gap: 24px; margin-bottom: 24px; flex-wrap: wrap; }
+  .detail-img { width: 220px; height: 280px; object-fit: cover; border-radius: 16px; background: #f0f0f0; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #aaa; font-size: 14px; overflow: hidden; }
+  .detail-info { flex: 1; min-width: 280px; }
+  .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; font-size: 14px; }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-label { color: #888; font-weight: 500; }
+  .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .calendar-day-header { text-align: center; font-size: 13px; color: #888; padding: 10px 4px; font-weight: 600; }
+  .calendar-day { aspect-ratio: 1; border: 1px solid #eee; border-radius: 12px; padding: 8px; font-size: 14px; cursor: pointer; position: relative; min-height: 70px; background: #fff; }
+  .calendar-day:hover { background: #f5f5f7; }
+  .calendar-day.today { border-color: #1a1a1a; border-width: 2px; }
+  .calendar-day.selected { background: #e3f2fd; }
+  .day-num { font-weight: 700; margin-bottom: 6px; color: #1a1a1a; }
+  .day-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin: 1px; }
+  .dot-out { background: #ff9800; }
+  .dot-return { background: #4caf50; }
+  .dot-booked { background: #2196f3; }
+  .log-entry { padding: 12px 0; border-bottom: 1px solid #eee; font-size: 14px; }
+  .log-entry:last-child { border-bottom: none; }
+  .log-time { font-size: 12px; color: #aaa; margin-top: 4px; }
+  .hidden { display: none !important; }
+  .actions { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+  .tabs { display: flex; gap: 4px; border-bottom: 2px solid #eee; margin-bottom: 18px; }
+  .tab { padding: 12px 18px; background: none; border: none; cursor: pointer; font-size: 14px; color: #888; border-bottom: 2px solid transparent; margin-bottom: -2px; font-family: 'Cairo', sans-serif; font-weight: 600; }
+  .tab.active { color: #1a1a1a; border-bottom-color: #1a1a1a; }
+  .filter-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .chip { padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; border: 1px solid #ddd; background: #fff; color: #666; font-weight: 500; font-family: 'Cairo', sans-serif; }
+  .chip.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+  .payment-row { display: flex; justify-content: space-between; padding: 12px; background: #f5f5f7; border-radius: 10px; margin-bottom: 10px; font-weight: 600; }
+  .img-upload { border: 2px dashed #ddd; border-radius: 12px; padding: 24px; text-align: center; cursor: pointer; color: #888; font-size: 14px; transition: all 0.2s; }
+  .img-upload:hover { border-color: #1a1a1a; color: #1a1a1a; }
+  .img-preview { max-width: 100%; max-height: 200px; border-radius: 10px; margin-top: 12px; }
+  .checkbox-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; }
+  .checkbox-row input[type="checkbox"] { width: 20px; height: 20px; accent-color: #1a1a1a; cursor: pointer; }
+  .checkbox-row label { font-weight: 600; color: #1a1a1a; cursor: pointer; }
+  .empty-state { text-align: center; padding: 40px; color: #aaa; font-size: 15px; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+  .badge-green { background: #e8f5e9; color: #2e7d32; }
+  .badge-red { background: #ffebee; color: #c62828; }
+  .delivered-check { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; background: #e8f5e9; color: #2e7d32; }
+  .not-delivered-check { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; background: #ffebee; color: #c62828; }
+  .export-btn { position: fixed; bottom: 20px; left: 20px; background: #1a1a1a; color: #fff; padding: 14px 20px; border-radius: 50px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2); border: none; font-family: 'Cairo', sans-serif; z-index: 50; }
+  .export-btn:hover { transform: scale(1.05); }
+  @media (max-width: 600px) {
+    .detail-header { flex-direction: column; }
+    .detail-img { width: 100%; height: 240px; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>👗 إدارة فساتين السهرة والتأجير</h1>
+    <span id="todayDate" style="font-size:14px;color:#888;font-weight:500;"></span>
+  </div>
+
+  <div class="nav">
+    <button class="active" onclick="showView('dashboard')">📊 لوحة التحكم</button>
+    <button onclick="showView('dresses')">👗 الفساتين</button>
+    <button onclick="showView('calendar')">📅 التقويم</button>
+    <button onclick="showView('add')">➕ إضافة فستان</button>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="view-dashboard">
+    <div class="stats-grid">
+      <div class="stat-box"><div class="stat-value" id="stat-total">0</div><div class="stat-label">إجمالي الفساتين</div></div>
+      <div class="stat-box"><div class="stat-value" id="stat-available">0</div><div class="stat-label">متاحة</div></div>
+      <div class="stat-box"><div class="stat-value" id="stat-booked">0</div><div class="stat-label">محجوزة</div></div>
+      <div class="stat-box"><div class="stat-value" id="stat-out">0</div><div class="stat-label">خارجة</div></div>
+      <div class="stat-box"><div class="stat-value" id="stat-delivered">0</div><div class="stat-label">تم التسليم</div></div>
+      <div class="stat-box"><div class="stat-value" id="stat-cleaning">0</div><div class="stat-label">تحتاج تنظيف</div></div>
+      <div class="stat-box"><div class="stat-value" id="stat-repair">0</div><div class="stat-label">تحتاج تظبيط</div></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">⚡ التنبيهات والمواعيد اليوم</div>
+      <div id="alerts-container"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">📋 الفساتين الخارجة حالياً</div>
+      <div id="out-dresses"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">💰 المبالغ المتبقية</div>
+      <div id="pending-payments"></div>
+    </div>
+  </div>
+
+  <!-- Dresses List -->
+  <div id="view-dresses" class="hidden">
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="🔍 ابحث بالكود أو الاسم أو اللون أو المقاس..." oninput="renderDresses()">
+      <select id="statusFilter" onchange="renderDresses()">
+        <option value="">كل الحالات</option>
+        <option value="available">متاح</option>
+        <option value="booked">محجوز</option>
+        <option value="out">خارج المحل</option>
+        <option value="cleaning">يحتاج تنظيف</option>
+        <option value="repair">يحتاج تظبيط</option>
+      </select>
+    </div>
+    <div id="dresses-list" class="dress-grid"></div>
+  </div>
+
+  <!-- Calendar -->
+  <div id="view-calendar" class="hidden">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+        <button class="btn btn-secondary" onclick="changeMonth(-1)">◀ الشهر السابق</button>
+        <h3 id="calendar-month" style="font-size:20px;font-weight:700;"></h3>
+        <button class="btn btn-secondary" onclick="changeMonth(1)">الشهر التالي ▶</button>
+      </div>
+      <div class="calendar-grid" id="calendar-header"></div>
+      <div class="calendar-grid" id="calendar-days" style="margin-top:6px;"></div>
+    </div>
+    <div class="card" id="day-events">
+      <div class="section-title">📅 أحداث اليوم المختار</div>
+      <div id="selected-day-events"></div>
+    </div>
+  </div>
+
+  <!-- Add Dress -->
+  <div id="view-add" class="hidden">
+    <div class="card">
+      <div class="section-title">➕ إضافة فستان جديد</div>
+      <form id="addDressForm" onsubmit="saveDress(event)">
+        <div class="form-group"><label>كود الفستان *</label><input type="text" id="d-code" required></div>
+        <div class="form-group"><label>الاسم / الوصف *</label><input type="text" id="d-name" required></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-group"><label>المقاس</label><input type="text" id="d-size"></div>
+          <div class="form-group"><label>اللون</label><input type="text" id="d-color"></div>
+        </div>
+        <div class="form-group"><label>سعر التأجير</label><input type="number" id="d-price" min="0" step="0.01"></div>
+        <div class="form-group"><label>الحالة</label>
+          <select id="d-status">
+            <option value="available">متاح</option>
+            <option value="booked">محجوز</option>
+            <option value="out">خارج المحل</option>
+            <option value="cleaning">يحتاج تنظيف</option>
+            <option value="repair">يحتاج تظبيط</option>
+          </select>
+        </div>
+        <div class="form-group"><label>صورة الفستان</label>
+          <div class="img-upload" onclick="document.getElementById('d-image').click()">
+            <span>📷 اضغط لاختيار صورة من جهازك</span>
+            <input type="file" id="d-image" accept="image/*" style="display:none" onchange="previewImage(this)">
+          </div>
+          <img id="d-preview" class="img-preview hidden">
+        </div>
+        <div class="form-group"><label>ملاحظات</label><textarea id="d-notes"></textarea></div>
+        <div class="actions">
+          <button type="submit" class="btn btn-primary">💾 حفظ الفستان</button>
+          <button type="button" class="btn btn-secondary" onclick="showView('dresses')">إلغاء</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Dress Detail -->
+  <div id="view-detail" class="hidden">
+    <div class="card">
+      <div class="detail-header">
+        <div class="detail-img" id="detail-img">لا توجد صورة</div>
+        <div class="detail-info">
+          <h2 id="detail-name" style="font-size:22px;font-weight:700;margin-bottom:10px;"></h2>
+          <div id="detail-status"></div>
+          <div style="margin-top:14px;">
+            <div class="detail-row"><span class="detail-label">الكود</span><span id="detail-code"></span></div>
+            <div class="detail-row"><span class="detail-label">المقاس</span><span id="detail-size"></span></div>
+            <div class="detail-row"><span class="detail-label">اللون</span><span id="detail-color"></span></div>
+            <div class="detail-row"><span class="detail-label">سعر التأجير</span><span id="detail-price"></span></div>
+            <div class="detail-row"><span class="detail-label">ملاحظات</span><span id="detail-notes"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" onclick="showDetailTab('booking')">📝 حجز / تأجير</button>
+        <button class="tab" onclick="showDetailTab('history')">📜 السجل</button>
+        <button class="tab" onclick="showDetailTab('edit')">✏️ تعديل</button>
+      </div>
+
+      <div id="tab-booking">
+        <form id="bookingForm" onsubmit="saveBooking(event)">
+          <input type="hidden" id="b-dress-id">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="form-group"><label>اسم العميلة *</label><input type="text" id="b-client" required></div>
+            <div class="form-group"><label>رقم الهاتف</label><input type="tel" id="b-phone"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="form-group"><label>تاريخ الخروج *</label><input type="date" id="b-out" required></div>
+            <div class="form-group"><label>تاريخ الرجوع *</label><input type="date" id="b-return" required></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+            <div class="form-group"><label>سعر الفستان</label><input type="number" id="b-price" min="0" step="0.01"></div>
+            <div class="form-group"><label>العربون المدفوع</label><input type="number" id="b-paid" min="0" step="0.01" oninput="calcRemaining()"></div>
+            <div class="form-group"><label>التأمين</label><input type="number" id="b-deposit" min="0" step="0.01"></div>
+          </div>
+          <div class="payment-row"><span>المتبقي:</span><strong id="b-remaining" style="font-size:20px;color:#f44336;">0</strong></div>
+
+          <div style="background:#f5f5f7;border-radius:12px;padding:16px;margin:16px 0;">
+            <div class="checkbox-row">
+              <input type="checkbox" id="b-delivered">
+              <label for="b-delivered">✅ تم تسليم الفستان للعميلة (خروج الفعلي من المحل)</label>
+            </div>
+            <div class="checkbox-row">
+              <input type="checkbox" id="b-id-card">
+              <label for="b-id-card">🪪 تم استلام بطاقة العميلة</label>
+            </div>
+          </div>
+
+          <div class="form-group"><label>ملاحظات / تظبيطات مطلوبة</label><textarea id="b-notes"></textarea></div>
+          <div class="actions">
+            <button type="submit" class="btn btn-primary">✅ تسجيل الحجز</button>
+            <button type="button" class="btn btn-success" onclick="markReturned()">🔄 تسجيل رجوع الفستان</button>
+            <button type="button" class="btn btn-warning" onclick="markStatus('cleaning')">🧹 يحتاج تنظيف</button>
+            <button type="button" class="btn btn-danger" onclick="markStatus('repair')">🔧 يحتاج تظبيط</button>
+            <button type="button" class="btn btn-secondary" onclick="markStatus('available')">✨ متاح</button>
+          </div>
+        </form>
+      </div>
+
+      <div id="tab-history" class="hidden">
+        <div id="history-list"></div>
+      </div>
+
+      <div id="tab-edit" class="hidden">
+        <form id="editForm" onsubmit="updateDress(event)">
+          <input type="hidden" id="e-id">
+          <div class="form-group"><label>الكود</label><input type="text" id="e-code"></div>
+          <div class="form-group"><label>الاسم</label><input type="text" id="e-name"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="form-group"><label>المقاس</label><input type="text" id="e-size"></div>
+            <div class="form-group"><label>اللون</label><input type="text" id="e-color"></div>
+          </div>
+          <div class="form-group"><label>السعر</label><input type="number" id="e-price" min="0" step="0.01"></div>
+          <div class="form-group"><label>ملاحظات</label><textarea id="e-notes"></textarea></div>
+          <div class="actions">
+            <button type="submit" class="btn btn-primary">💾 حفظ التعديلات</button>
+            <button type="button" class="btn btn-danger" onclick="deleteDress()">🗑️ حذف الفستان</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<button class="export-btn" onclick="exportData()" title="تصدير البيانات">📥 تصدير البيانات</button>
+
+<script>
+// ===== Data Layer =====
+let dresses = JSON.parse(localStorage.getItem('dresses') || '[]');
+let bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+let logs = JSON.parse(localStorage.getItem('logs') || '[]');
+let currentView = 'dashboard';
+let currentMonth = new Date();
+let selectedDressId = null;
+let selectedDate = null;
+
+function saveData() {
+  localStorage.setItem('dresses', JSON.stringify(dresses));
+  localStorage.setItem('bookings', JSON.stringify(bookings));
+  localStorage.setItem('logs', JSON.stringify(logs));
+}
+
+function addLog(dressId, action, details) {
+  logs.unshift({ id: Date.now(), dressId, action, details, date: new Date().toISOString() });
+  saveData();
+}
+
+// ===== Navigation =====
+function showView(view) {
+  document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+  const btns = document.querySelectorAll('.nav button');
+  const map = { dashboard: 0, dresses: 1, calendar: 2, add: 3 };
+  if (map[view] !== undefined) btns[map[view]].classList.add('active');
+  document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('hidden'));
+  document.getElementById('view-' + view).classList.remove('hidden');
+  currentView = view;
+  if (view === 'dashboard') renderDashboard();
+  if (view === 'dresses') renderDresses();
+  if (view === 'calendar') renderCalendar();
+}
+
+// ===== Dashboard =====
+function renderDashboard() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('todayDate').textContent = new Date().toLocaleDateString('ar-SA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+  const stats = {
+    total: dresses.length,
+    available: dresses.filter(d => d.status === 'available').length,
+    booked: dresses.filter(d => d.status === 'booked').length,
+    out: dresses.filter(d => d.status === 'out').length,
+    delivered: bookings.filter(b => b.delivered && !b.returned).length,
+    cleaning: dresses.filter(d => d.status === 'cleaning').length,
+    repair: dresses.filter(d => d.status === 'repair').length
+  };
+  Object.keys(stats).forEach(k => {
+    const el = document.getElementById('stat-' + k);
+    if (el) el.textContent = stats[k];
+  });
+
+  // Alerts
+  const alerts = [];
+  const todayBookings = bookings.filter(b => b.outDate === today && !b.returned);
+  const todayReturns = bookings.filter(b => b.returnDate === today && !b.returned);
+  const overdue = bookings.filter(b => b.returnDate < today && !b.returned);
+  const upcoming = bookings.filter(b => b.outDate > today && b.outDate <= addDays(today, 3) && !b.returned);
+
+  todayBookings.forEach(b => {
+    const d = dresses.find(x => x.id === b.dressId);
+    if (d) alerts.push({ type: 'warning', text: `🟡 فستان "${d.name}" (كود: ${d.code}) موعد خروجه اليوم - العميلة: ${b.client}${b.delivered ? ' | ✅ تم التسليم' : ' | ⏳ لم يُسلم بعد'}` });
+  });
+  todayReturns.forEach(b => {
+    const d = dresses.find(x => x.id === b.dressId);
+    if (d) alerts.push({ type: 'success', text: `🟢 فستان "${d.name}" (كود: ${d.code}) موعد رجوعه اليوم - العميلة: ${b.client}` });
+  });
+  overdue.forEach(b => {
+    const d = dresses.find(x => x.id === b.dressId);
+    if (d) alerts.push({ type: 'danger', text: `🔴 فستان "${d.name}" (كود: ${d.code}) تأخر في الرجوع! كان موعده ${b.returnDate} - العميلة: ${b.client}` });
+  });
+  upcoming.forEach(b => {
+    const d = dresses.find(x => x.id === b.dressId);
+    if (d) alerts.push({ type: 'info', text: `📌 حجز قادم: فستان "${d.name}" (كود: ${d.code}) سيخرج بتاريخ ${b.outDate} - العميلة: ${b.client}` });
+  });
+
+  const needsPrep = bookings.filter(b => b.outDate === today && b.notes && b.notes.trim() && !b.returned);
+  needsPrep.forEach(b => {
+    const d = dresses.find(x => x.id === b.dressId);
+    if (d) alerts.push({ type: 'warning', text: `⚠️ فستان "${d.name}" يحتاج تجهيز قبل خروجه اليوم: ${b.notes}` });
+  });
+
+  const alertsContainer = document.getElementById('alerts-container');
+  if (alerts.length === 0) {
+    alertsContainer.innerHTML = '<div class="empty-state">لا توجد تنبيهات لهذا اليوم ✅</div>';
+  } else {
+    alertsContainer.innerHTML = alerts.map(a => `<div class="alert-box alert-${a.type}">${a.text}</div>`).join('');
+  }
+
+  // Out dresses
+  const outContainer = document.getElementById('out-dresses');
+  const outList = dresses.filter(d => d.status === 'out');
+  if (outList.length === 0) {
+    outContainer.innerHTML = '<div class="empty-state">لا توجد فساتين خارجة حالياً</div>';
+  } else {
+    outContainer.innerHTML = outList.map(d => {
+      const b = bookings.find(x => x.dressId === d.id && !x.returned);
+      const deliveredBadge = b && b.delivered ? '<span class="badge badge-green">✅ تم التسليم</span>' : '<span class="badge badge-red">⏳ لم يُسلم</span>';
+      return `<div class="detail-row" style="align-items:center;"><span>${d.name} (كود: ${d.code})</span><span style="display:flex;align-items:center;gap:8px;">${deliveredBadge} <span style="color:#888;font-size:13px;">${b ? 'العميلة: ' + b.client + ' | رجوع: ' + b.returnDate : ''}</span></span></div>`;
+    }).join('');
+  }
+
+  // Pending payments
+  const pendingContainer = document.getElementById('pending-payments');
+  const pending = bookings.filter(b => !b.returned && b.remaining > 0);
+  if (pending.length === 0) {
+    pendingContainer.innerHTML = '<div class="empty-state">لا توجد مبالغ متبقية</div>';
+  } else {
+    let totalPending = 0;
+    pendingContainer.innerHTML = pending.map(b => {
+      const d = dresses.find(x => x.id === b.dressId);
+      totalPending += b.remaining;
+      return `<div class="detail-row"><span>${d ? d.name : 'فستان'} - ${b.client}</span><strong style="color:#f44336;font-size:16px;">${b.remaining.toFixed(2)} ر.س</strong></div>`;
+    }).join('') + `<div class="detail-row" style="margin-top:10px;border-top:2px solid #eee;padding-top:14px;"><span class="detail-label">الإجمالي المتبقي</span><strong style="font-size:20px;">${totalPending.toFixed(2)} ر.س</strong></div>`;
+  }
+}
+
+// ===== Dresses =====
+function renderDresses() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const status = document.getElementById('statusFilter').value;
+  let list = dresses;
+  if (search) list = list.filter(d => (d.code + d.name + d.color + d.size).toLowerCase().includes(search));
+  if (status) list = list.filter(d => d.status === status);
+
+  const container = document.getElementById('dresses-list');
+  if (list.length === 0) {
+    container.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">لا توجد نتائج</div>';
+    return;
+  }
+  container.innerHTML = list.map(d => {
+    const statusLabels = { available: 'متاح', booked: 'محجوز', out: 'خارج المحل', cleaning: 'يحتاج تنظيف', repair: 'يحتاج تظبيط' };
+    const statusClass = 'status-' + d.status;
+    const imgHtml = d.image ? `<img src="${d.image}" class="dress-img" style="object-fit:cover;">` : `<div class="dress-img">لا توجد صورة</div>`;
+    const b = bookings.find(x => x.dressId === d.id && !x.returned);
+    const deliveredTag = b && b.delivered ? '<span style="font-size:11px;color:#4caf50;font-weight:600;">✅ تم التسليم</span>' : '';
+    return `
+      <div class="dress-card" onclick="showDressDetail('${d.id}')">
+        ${imgHtml}
+        <div class="dress-info">
+          <div class="dress-name">${d.name}</div>
+          <div class="dress-meta">كود: ${d.code} | مقاس: ${d.size || '-'} | لون: ${d.color || '-'}</div>
+          <div class="dress-meta">السعر: ${d.price ? d.price + ' ر.س' : '-'} ${deliveredTag}</div>
+          <span class="status-badge ${statusClass}">${statusLabels[d.status] || d.status}</span>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function showDressDetail(id) {
+  selectedDressId = id;
+  const d = dresses.find(x => x.id === id);
+  if (!d) return;
+
+  document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('hidden'));
+  document.getElementById('view-detail').classList.remove('hidden');
+  document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+
+  const statusLabels = { available: 'متاح', booked: 'محجوز', out: 'خارج المحل', cleaning: 'يحتاج تنظيف', repair: 'يحتاج تظبيط' };
+  const statusColors = { available: '#4caf50', booked: '#2196f3', out: '#ff9800', cleaning: '#9c27b0', repair: '#f44336' };
+
+  document.getElementById('detail-name').textContent = d.name;
+  document.getElementById('detail-status').innerHTML = `<span class="status-badge" style="background:${statusColors[d.status]}15;color:${statusColors[d.status]};">${statusLabels[d.status]}</span>`;
+  document.getElementById('detail-code').textContent = d.code;
+  document.getElementById('detail-size').textContent = d.size || '-';
+  document.getElementById('detail-color').textContent = d.color || '-';
+  document.getElementById('detail-price').textContent = d.price ? d.price + ' ر.س' : '-';
+  document.getElementById('detail-notes').textContent = d.notes || '-';
+
+  const imgEl = document.getElementById('detail-img');
+  if (d.image) { imgEl.innerHTML = `<img src="${d.image}" style="width:100%;height:100%;object-fit:cover;">`; }
+  else { imgEl.textContent = 'لا توجد صورة'; }
+
+  // Current booking info
+  const currentBooking = bookings.find(b => b.dressId === id && !b.returned);
+  document.getElementById('b-dress-id').value = id;
+  if (currentBooking) {
+    document.getElementById('b-client').value = currentBooking.client || '';
+    document.getElementById('b-phone').value = currentBooking.phone || '';
+    document.getElementById('b-out').value = currentBooking.outDate || '';
+    document.getElementById('b-return').value = currentBooking.returnDate || '';
+    document.getElementById('b-price').value = currentBooking.price || d.price || '';
+    document.getElementById('b-paid').value = currentBooking.paid || '';
+    document.getElementById('b-deposit').value = currentBooking.deposit || '';
+    document.getElementById('b-delivered').checked = currentBooking.delivered || false;
+    document.getElementById('b-id-card').checked = currentBooking.idCard || false;
+    document.getElementById('b-notes').value = currentBooking.notes || '';
+    calcRemaining();
+  } else {
+    document.getElementById('bookingForm').reset();
+    document.getElementById('b-dress-id').value = id;
+    document.getElementById('b-price').value = d.price || '';
+  }
+
+  // History
+  const dressLogs = logs.filter(l => l.dressId === id);
+  const historyContainer = document.getElementById('history-list');
+  if (dressLogs.length === 0) {
+    historyContainer.innerHTML = '<div class="empty-state">لا يوجد سجل عمليات</div>';
+  } else {
+    historyContainer.innerHTML = dressLogs.map(l => {
+      const date = new Date(l.date).toLocaleString('ar-SA');
+      return `<div class="log-entry"><strong style="color:#1a1a1a;">${l.action}</strong><div style="color:#555;margin-top:4px;">${l.details}</div><div class="log-time">${date}</div></div>`;
+    }).join('');
+  }
+
+  // Edit form
+  document.getElementById('e-id').value = d.id;
+  document.getElementById('e-code').value = d.code;
+  document.getElementById('e-name').value = d.name;
+  document.getElementById('e-size').value = d.size || '';
+  document.getElementById('e-color').value = d.color || '';
+  document.getElementById('e-price').value = d.price || '';
+  document.getElementById('e-notes').value = d.notes || '';
+
+  showDetailTab('booking');
+}
+
+function showDetailTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
+  document.getElementById('tab-' + tab).classList.remove('hidden');
+}
+
+// ===== Add Dress =====
+let tempImage = null;
+function previewImage(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => { tempImage = e.target.result; document.getElementById('d-preview').src = tempImage; document.getElementById('d-preview').classList.remove('hidden'); };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+function saveDress(e) {
+  e.preventDefault();
+  const dress = {
+    id: 'd_' + Date.now(),
+    code: document.getElementById('d-code').value,
+    name: document.getElementById('d-name').value,
+    size: document.getElementById('d-size').value,
+    color: document.getElementById('d-color').value,
+    price: parseFloat(document.getElementById('d-price').value) || 0,
+    status: document.getElementById('d-status').value,
+    image: tempImage,
+    notes: document.getElementById('d-notes').value
+  };
+  dresses.push(dress);
+  addLog(dress.id, 'إضافة فستان', `تم إضافة الفستان ${dress.name} (كود: ${dress.code})`);
+  saveData();
+  tempImage = null;
+  document.getElementById('addDressForm').reset();
+  document.getElementById('d-preview').classList.add('hidden');
+  showView('dresses');
+  renderDresses();
+}
+
+// ===== Booking =====
+function calcRemaining() {
+  const price = parseFloat(document.getElementById('b-price').value) || 0;
+  const paid = parseFloat(document.getElementById('b-paid').value) || 0;
+  document.getElementById('b-remaining').textContent = Math.max(0, price - paid).toFixed(2);
+}
+
+function saveBooking(e) {
+  e.preventDefault();
+  const dressId = document.getElementById('b-dress-id').value;
+  const price = parseFloat(document.getElementById('b-price').value) || 0;
+  const paid = parseFloat(document.getElementById('b-paid').value) || 0;
+  const delivered = document.getElementById('b-delivered').checked;
+
+  // Remove existing active booking for this dress
+  bookings = bookings.filter(b => !(b.dressId === dressId && !b.returned));
+
+  const booking = {
+    id: 'b_' + Date.now(),
+    dressId,
+    client: document.getElementById('b-client').value,
+    phone: document.getElementById('b-phone').value,
+    outDate: document.getElementById('b-out').value,
+    returnDate: document.getElementById('b-return').value,
+    price,
+    paid,
+    remaining: Math.max(0, price - paid),
+    deposit: parseFloat(document.getElementById('b-deposit').value) || 0,
+    idCard: document.getElementById('b-id-card').checked,
+    delivered,
+    notes: document.getElementById('b-notes').value,
+    returned: false,
+    returnCondition: '',
+    createdAt: new Date().toISOString()
+  };
+  bookings.push(booking);
+
+  const d = dresses.find(x => x.id === dressId);
+  d.status = delivered ? 'out' : 'booked';
+
+  addLog(dressId, 'تأجير فستان', `تم تأجير الفستان للعميلة ${booking.client} من ${booking.outDate} إلى ${booking.returnDate}${delivered ? ' (تم التسليم)' : ' (محجوز - لم يُسلم)'}`);
+  saveData();
+  showDressDetail(dressId);
+}
+
+function markReturned() {
+  const dressId = document.getElementById('b-dress-id').value;
+  const b = bookings.find(x => x.dressId === dressId && !x.returned);
+  if (!b) { alert('لا يوجد حجز نشط لهذا الفستان'); return; }
+  b.returned = true;
+  b.returnCondition = prompt('حالة الفستان عند الرجوع (اختياري):') || '';
+
+  const d = dresses.find(x => x.id === dressId);
+  d.status = 'cleaning';
+
+  addLog(dressId, 'رجوع فستان', `تم استلام الفستان من العميلة ${b.client}. الحالة: ${b.returnCondition || 'عادي'}`);
+  saveData();
+  showDressDetail(dressId);
+}
+
+function markStatus(status) {
+  const dressId = document.getElementById('b-dress-id').value;
+  const d = dresses.find(x => x.id === dressId);
+  const oldStatus = d.status;
+  d.status = status;
+  const statusLabels = { available: 'متاح', booked: 'محجوز', out: 'خارج المحل', cleaning: 'يحتاج تنظيف', repair: 'يحتاج تظبيط' };
+  addLog(dressId, 'تغيير الحالة', `تم تغيير الحالة من ${statusLabels[oldStatus]} إلى ${statusLabels[status]}`);
+  saveData();
+  showDressDetail(dressId);
+}
+
+function updateDress(e) {
+  e.preventDefault();
+  const id = document.getElementById('e-id').value;
+  const d = dresses.find(x => x.id === id);
+  d.code = document.getElementById('e-code').value;
+  d.name = document.getElementById('e-name').value;
+  d.size = document.getElementById('e-size').value;
+  d.color = document.getElementById('e-color').value;
+  d.price = parseFloat(document.getElementById('e-price').value) || 0;
+  d.notes = document.getElementById('e-notes').value;
+  addLog(id, 'تعديل بيانات', 'تم تعديل بيانات الفستان');
+  saveData();
+  showDressDetail(id);
+}
+
+function deleteDress() {
+  if (!confirm('هل أنت متأكد من حذف هذا الفستان؟')) return;
+  dresses = dresses.filter(d => d.id !== selectedDressId);
+  bookings = bookings.filter(b => b.dressId !== selectedDressId);
+  logs = logs.filter(l => l.dressId !== selectedDressId);
+  saveData();
+  showView('dresses');
+  renderDresses();
+}
+
+// ===== Calendar =====
+function renderCalendar() {
+  const year = currentMonth.getFullYear();
+  const month = currentMonth.getMonth();
+  document.getElementById('calendar-month').textContent = new Date(year, month).toLocaleDateString('ar-SA', { year: 'numeric', month: 'long' });
+
+  const days = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  document.getElementById('calendar-header').innerHTML = days.map(d => `<div class="calendar-day-header">${d}</div>`).join('');
+
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = new Date().toISOString().split('T')[0];
+
+  let html = '';
+  for (let i = 0; i < firstDay; i++) html += '<div class="calendar-day" style="opacity:0.2;"></div>';
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const isToday = dateStr === today;
+    const isSelected = selectedDate === dateStr;
+
+    const dayBookings = bookings.filter(b => !b.returned && (b.outDate === dateStr || b.returnDate === dateStr));
+    let dots = '';
+    dayBookings.forEach(b => {
+      if (b.outDate === dateStr) dots += '<span class="day-dot dot-out" title="خروج"></span>';
+      if (b.returnDate === dateStr) dots += '<span class="day-dot dot-return" title="رجوع"></span>';
+    });
+
+    html += `<div class="calendar-day ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}" onclick="selectDate('${dateStr}')">
+      <div class="day-num">${day}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:2px;">${dots}</div>
+    </div>`;
+  }
+  document.getElementById('calendar-days').innerHTML = html;
+
+  if (selectedDate) showDayEvents(selectedDate);
+}
+
+function changeMonth(delta) {
+  currentMonth.setMonth(currentMonth.getMonth() + delta);
+  renderCalendar();
+}
+
+function selectDate(date) {
+  selectedDate = date;
+  renderCalendar();
+  showDayEvents(date);
+}
+
+function showDayEvents(date) {
+  const container = document.getElementById('selected-day-events');
+  const dayBookings = bookings.filter(b => !b.returned && (b.outDate === date || b.returnDate === date));
+
+  if (dayBookings.length === 0) {
+    container.innerHTML = '<div class="empty-state">لا توجد أحداث في هذا اليوم</div>';
+    return;
+  }
+
+  container.innerHTML = dayBookings.map(b => {
+    const d = dresses.find(x => x.id === b.dressId);
+    const type = b.outDate === date ? 'خروج' : 'رجوع';
+    const color = b.outDate === date ? '#ff9800' : '#4caf50';
+    const deliveredTag = b.delivered ? '<span class="badge badge-green" style="margin-right:8px;">✅ تم التسليم</span>' : '<span class="badge badge-red" style="margin-right:8px;">⏳ لم يُسلم</span>';
+    return `<div class="detail-row" style="padding:12px;background:#f5f5f7;border-radius:10px;margin-bottom:10px;flex-direction:column;align-items:flex-start;gap:6px;">
+      <div style="display:flex;align-items:center;gap:8px;"><strong style="color:${color};font-size:16px;">${type}</strong>${deliveredTag}</div>
+      <div style="font-weight:600;">${d ? d.name : 'فستان'} (كود: ${d ? d.code : '-'})</div>
+      <div style="font-size:13px;color:#888;">العميلة: ${b.client} | ${b.outDate === date ? 'رجوع: ' + b.returnDate : 'خرج: ' + b.outDate}</div>
+    </div>`;
+  }).join('');
+}
+
+// ===== Export Data =====
+function exportData() {
+  const data = { dresses, bookings, logs, exportedAt: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'dress-rental-data-' + new Date().toISOString().split('T')[0] + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  alert('✅ تم تصدير البيانات بنجاح! احفظ الملف في مكان آمن.');
+}
+
+// ===== Helpers =====
+function addDays(dateStr, days) {
+  const d = new Date(dateStr);
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split('T')[0];
+}
+
+// ===== Init =====
+renderDashboard();
+</script>
+</body>
+</html>
